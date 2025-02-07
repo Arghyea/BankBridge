@@ -1,152 +1,139 @@
 #include <iostream>
-#include <vector>
-#include <cmath>
-#include <limits>
 #include <iomanip>
+#include <vector>
+#include <limits>
 
 using namespace std;
 
-struct LoanTerms {
-    double amount;
-    double interestRate;
-    int tenureYears;
-    string repaymentFrequency;
-};
-
 class LoanCalculator {
 private:
-    const double BASE_RATE_SALARIED = 10.5;
-    const double BASE_RATE_SELF_EMPLOYED = 12.0;
-    const double MIN_LOAN_AMOUNT = 50000;
-    
-    double getMaxLoanAmount(double annualIncome, int employmentStatus) {
-        return (employmentStatus == 1) ? annualIncome * 5 : annualIncome * 3;
-    }
+    const double BASE_RATE = 9.5;
+    const double MANUFACTURING_RATE = 7.0;
+    const double MIN_LOAN = 50000;
+    const double MAX_GENERAL_LOAN = 5000000;
+    const double MANUFACTURING_MIN_INVESTMENT = 10000000;
 
 public:
-    void calculateEMI(const LoanTerms &terms) {
-        double monthlyRate = terms.interestRate / 12 / 100;
-        int months = terms.tenureYears * 12;
-        double emi = (terms.amount * monthlyRate * pow(1 + monthlyRate, months)) 
+    void calculateEMI(double amount, double rate, int years) {
+        double monthlyRate = rate / 12 / 100;
+        int months = years * 12;
+        double emi = (amount * monthlyRate * pow(1 + monthlyRate, months)) 
                     / (pow(1 + monthlyRate, months) - 1);
 
-        cout << "\nRepayment Schedule:\n";
-        cout << "EMI: ₹" << fixed << setprecision(2) << emi << " per month\n";
-        
-        if(terms.repaymentFrequency == "Quarterly") {
-            cout << "Quarterly Payment: ₹" << emi * 3 << endl;
-        }
-        else if(terms.repaymentFrequency == "Annual") {
-            cout << "Annual Payment: ₹" << emi * 12 << endl;
+        cout << "EMI: ₹" << fixed << setprecision(2) << emi << "/month\n";
+    }
+
+    void displayLoanTerms(bool isManufacturing, double investment) {
+        cout << "\n=== SPECIAL PROVISIONS ===";
+        if(isManufacturing && investment >= MANUFACTURING_MIN_INVESTMENT) {
+            cout << "\n✅ Manufacturing Business Benefits:\n"
+                 << "- Eligible for 15% capital subsidy (CLCSS Scheme) :cite[6]:cite[10]\n"
+                 << "- Priority land allocation through Make in India initiative\n"
+                 << "- Interest rate capped at " << MANUFACTURING_RATE << "%\n"
+                 << "- GST reimbursement for first 3 years\n";
         }
     }
 
-    LoanTerms getLoanTerms(double annualIncome, int employmentStatus) {
-        LoanTerms terms;
+    void getLoanDetails(double annualIncome, int empStatus, bool isNewBusiness) {
+        double maxLoan = (empStatus == 1) ? annualIncome * 3 : annualIncome * 2;
+        maxLoan = min(maxLoan, MAX_GENERAL_LOAN);
+
+        cout << "\nLoan Amount Ranges:\n";
+        cout << "- General Public: ₹" << fixed << setprecision(2) << MIN_LOAN 
+             << " - ₹" << maxLoan << endl;
         
-       
-        terms.interestRate = (employmentStatus == 1) ? BASE_RATE_SALARIED 
-                                                   : BASE_RATE_SELF_EMPLOYED;
-
-        double maxAmount = getMaxLoanAmount(annualIncome, employmentStatus);
-        do {
-            cout << "\nEnter desired loan amount (₹" 
-                 << fixed << setprecision(0) << MIN_LOAN_AMOUNT 
-                 << " - ₹" << fixed << setprecision(0) << maxAmount 
-                 << "): ";
-            cin >> terms.amount;
-        } while(terms.amount < MIN_LOAN_AMOUNT || terms.amount > maxAmount);
-
-        do {
-            cout << "Enter loan tenure (1-20 years): ";
-            cin >> terms.tenureYears;
-        } while(terms.tenureYears < 1 || terms.tenureYears > 20);
-
-        // repayment frequency 
-        int freqChoice;
-        do {
-            cout << "Repayment Frequency:\n1. Monthly\n2. Quarterly\n3. Annual\n";
-            cout << "Choose (1-3): ";
-            cin >> freqChoice;
-        } while(freqChoice < 1 || freqChoice > 3);
-
-        terms.repaymentFrequency = (freqChoice == 1) ? "Monthly" : 
-                                  (freqChoice == 2) ? "Quarterly" : "Annual";
-
-        return terms;
+        if(isNewBusiness) {
+            cout << "- New Businesses: ₹" << MIN_LOAN << " - ₹1,00,00,000\n";
+            cout << "- Manufacturing Startups: ₹10,00,000 - ₹5,00,00,000 "
+                 << "(with ₹1cr+ investment)\n";
+        }
     }
 };
 
 int main() {
     LoanCalculator calculator;
     vector<string> rejectionReasons;
-    int employmentStatus;
-    double annualIncome;
-    int creditScore;
+    int empStatus;
+    double annualIncome, businessInvestment = 0;
+    bool isNewBusiness = false, isManufacturing = false;
 
-    cout << "🏦 Smart Loan Advisor (₹) 🏦\n";
-    cout << "============================\n";
+    cout << "🏭 Smart Loan Advisor 2025 (₹) 🏭\n";
+    cout << "=================================\n";
 
-    // Get employment status
     do {
         cout << "\nEmployment Status:\n1. Salaried\n2. Self-Employed\n3. Unemployed\n";
         cout << "Choose (1-3): ";
-        cin >> employmentStatus;
-    } while(employmentStatus < 1 || employmentStatus > 3);
+        cin >> empStatus;
+    } while(empStatus < 1 || empStatus > 3);
 
-    if(employmentStatus == 3) {
-        rejectionReasons.push_back("Unemployment status");
-        goto conclusion;
-    }
+    cout << "Is this for a new business? (1-Yes/0-No): ";
+    cin >> isNewBusiness;
 
-    // annual salary
-    do {
-        cout << "Enter annual income (₹): ";
-        cin >> annualIncome;
-    } while(annualIncome <= 0);
+    if(isNewBusiness) {
+        cout << "Business Type:\n1. Manufacturing\n2. Other\nChoice: ";
+        int bizType;
+        cin >> bizType;
+        isManufacturing = (bizType == 1);
 
-    // credit score
-    do {
-        cout << "Enter credit score (300-900): ";
-        cin >> creditScore;
-    } while(creditScore < 300 || creditScore > 900);
-
-    if((employmentStatus == 1 && annualIncome < 300000) || 
-       (employmentStatus == 2 && annualIncome < 500000)) {
-        rejectionReasons.push_back("Insufficient annual income");
-    }
-
-    if((employmentStatus == 1 && creditScore < 700) || 
-       (employmentStatus == 2 && creditScore < 750)) {
-        rejectionReasons.push_back("Inadequate credit score");
-    }
-
-conclusion:
-    cout << "\n=== Loan Assessment Result ===\n";
-    if(rejectionReasons.empty()) {
-        cout << "✅ Approved!\n";
-        LoanTerms terms = calculator.getLoanTerms(annualIncome, employmentStatus);
-        cout << "\nLoan Offer Details:\n";
-        cout << "Amount: ₹" << fixed << setprecision(2) << terms.amount << endl;
-        cout << "Interest Rate: " << terms.interestRate << "% p.a.\n";
-        cout << "Tenure: " << terms.tenureYears << " years\n";
-        cout << "Repayment: " << terms.repaymentFrequency << endl;
-        
-        calculator.calculateEMI(terms);
-    }
-    else {
-        cout << "❌ Declined. Reasons:\n";
-        for(const string& reason : rejectionReasons) {
-            cout << "- " << reason << endl;
+        if(isManufacturing) {
+            cout << "Enter planned investment (₹): ";
+            cin >> businessInvestment;
         }
     }
 
-    // Transaction limit 
-    cout << "\nℹ️ Transaction Limits:\n";
-    cout << "- Minimum Loan: ₹50,000\n";
-    cout << "- Maximum Loan: " 
-         << (employmentStatus == 1 ? "5x annual income" : "3x annual income") 
-         << endl;
+    double minIncome = (empStatus == 1) ? 180000 : 240000;
+    do {
+        cout << "Enter annual income (₹): ";
+        cin >> annualIncome;
+    } while(annualIncome <= 0 && !isNewBusiness);
+
+    if(isManufacturing && businessInvestment >= 10000000) {
+        cout << "\n🌟 Special Manufacturing Package Activated 🌟\n";
+        minIncome = 0; // Waive income requirements
+    }
+
+    if(annualIncome < minIncome && !isManufacturing) {
+        rejectionReasons.push_back("Annual income below ₹" + to_string(minIncome));
+    }
+
+    calculator.getLoanDetails(annualIncome, empStatus, isNewBusiness);
+
+    cout << "\n=== GOVERNMENT SCHEMES ===";
+    if(isManufacturing) {
+        cout << "\n- Credit-Linked Capital Subsidy (15% on ₹1cr+ investment)"
+            << "\n- Make in India Interest Subsidy (2% rebate)"
+            << "\n- Industrial Park Allocation Priority";
+    }
+    if(annualIncome < 300000) {
+        cout << "\n- Eligible for Special Government Loan (₹50,000 at 1% interest)";
+    }
+    
+    if(rejectionReasons.empty()) {
+        double amount, rate = BASE_RATE;
+        int tenure;
+        
+        if(isManufacturing && businessInvestment >= 10000000) {
+            rate = MANUFACTURING_RATE;
+            cout << "\n\n=== MANUFACTURING LOAN TERMS ===";
+            cout << "\nMin. Investment: ₹1,00,00,000"
+                 << "\nInterest Rate: " << rate << "%"
+                 << "\nLand Acquisition: Government-assisted :cite[8]";
+        }
+
+        cout << "\n\nEnter desired amount (₹): ";
+        cin >> amount;
+        cout << "Enter tenure (years): ";
+        cin >> tenure;
+
+        calculator.displayLoanTerms(isManufacturing, businessInvestment);
+        calculator.calculateEMI(amount, rate, tenure);
+    }
+    else {
+        cout << "\n❌ Application Rejected. Reasons:\n";
+        for(const auto& reason : rejectionReasons) {
+            cout << "- " << reason << endl;
+        }
+    }
 
     return 0;
 }
