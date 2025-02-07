@@ -2,13 +2,16 @@
 #include <iomanip>
 #include <vector>
 #include <limits>
+#include <cmath> 
 
 using namespace std;
 
 class LoanCalculator {
+public:
+    static constexpr double BASE_RATE = 9.5;
+    static constexpr double MANUFACTURING_RATE = 7.0;
+    
 private:
-    const double BASE_RATE = 9.5;
-    const double MANUFACTURING_RATE = 7.0;
     const double MIN_LOAN = 50000;
     const double MAX_GENERAL_LOAN = 5000000;
     const double MANUFACTURING_MIN_INVESTMENT = 10000000;
@@ -22,12 +25,12 @@ public:
 
         cout << "EMI: ₹" << fixed << setprecision(2) << emi << "/month\n";
     }
-
+    
     void displayLoanTerms(bool isManufacturing, double investment) {
         cout << "\n=== SPECIAL PROVISIONS ===";
-        if(isManufacturing && investment >= MANUFACTURING_MIN_INVESTMENT) {
-            cout << "\n✅ Manufacturing Business Benefits:\n"
-                 << "- Eligible for 15% capital subsidy (CLCSS Scheme) :cite[6]:cite[10]\n"
+        if (isManufacturing && investment >= MANUFACTURING_MIN_INVESTMENT) {
+            cout << "\nManufacturing Business Benefits:\n"
+                 << "- Eligible for 15% capital subsidy (CLCSS Scheme)\n"
                  << "- Priority land allocation through Make in India initiative\n"
                  << "- Interest rate capped at " << MANUFACTURING_RATE << "%\n"
                  << "- GST reimbursement for first 3 years\n";
@@ -42,7 +45,7 @@ public:
         cout << "- General Public: ₹" << fixed << setprecision(2) << MIN_LOAN 
              << " - ₹" << maxLoan << endl;
         
-        if(isNewBusiness) {
+        if (isNewBusiness) {
             cout << "- New Businesses: ₹" << MIN_LOAN << " - ₹1,00,00,000\n";
             cout << "- Manufacturing Startups: ₹10,00,000 - ₹5,00,00,000 "
                  << "(with ₹1cr+ investment)\n";
@@ -51,31 +54,33 @@ public:
 };
 
 int main() {
+    double amount, rate = LoanCalculator::BASE_RATE;  
+    rate = LoanCalculator::MANUFACTURING_RATE;
     LoanCalculator calculator;
     vector<string> rejectionReasons;
     int empStatus;
     double annualIncome, businessInvestment = 0;
     bool isNewBusiness = false, isManufacturing = false;
 
-    cout << "🏭 Smart Loan Advisor 2025 (₹) 🏭\n";
-    cout << "=================================\n";
+    cout << "Bank Bridge \n";
+    cout << "============================\n";
 
     do {
         cout << "\nEmployment Status:\n1. Salaried\n2. Self-Employed\n3. Unemployed\n";
         cout << "Choose (1-3): ";
         cin >> empStatus;
-    } while(empStatus < 1 || empStatus > 3);
+    } while (empStatus < 1 || empStatus > 3);
 
     cout << "Is this for a new business? (1-Yes/0-No): ";
     cin >> isNewBusiness;
 
-    if(isNewBusiness) {
+    if (isNewBusiness) {
         cout << "Business Type:\n1. Manufacturing\n2. Other\nChoice: ";
         int bizType;
         cin >> bizType;
         isManufacturing = (bizType == 1);
 
-        if(isManufacturing) {
+        if (isManufacturing) {
             cout << "Enter planned investment (₹): ";
             cin >> businessInvestment;
         }
@@ -85,39 +90,39 @@ int main() {
     do {
         cout << "Enter annual income (₹): ";
         cin >> annualIncome;
-    } while(annualIncome <= 0 && !isNewBusiness);
+    } while (annualIncome <= 0 && !isNewBusiness);
 
-    if(isManufacturing && businessInvestment >= 10000000) {
-        cout << "\n🌟 Special Manufacturing Package Activated 🌟\n";
-        minIncome = 0; // Waive income requirements
+    if (isManufacturing && businessInvestment >= 10000000) {
+        cout << "\nSpecial Manufacturing Package Activated\n";
+        minIncome = 0;
     }
 
-    if(annualIncome < minIncome && !isManufacturing) {
+    if (annualIncome < minIncome && !isManufacturing) {
         rejectionReasons.push_back("Annual income below ₹" + to_string(minIncome));
     }
 
     calculator.getLoanDetails(annualIncome, empStatus, isNewBusiness);
 
     cout << "\n=== GOVERNMENT SCHEMES ===";
-    if(isManufacturing) {
+    if (isManufacturing) {
         cout << "\n- Credit-Linked Capital Subsidy (15% on ₹1cr+ investment)"
             << "\n- Make in India Interest Subsidy (2% rebate)"
             << "\n- Industrial Park Allocation Priority";
     }
-    if(annualIncome < 300000) {
+    if (annualIncome < 300000) {
         cout << "\n- Eligible for Special Government Loan (₹50,000 at 1% interest)";
     }
     
-    if(rejectionReasons.empty()) {
-        double amount, rate = BASE_RATE;
+    if (rejectionReasons.empty()) {
+        double amount, rate = LoanCalculator::BASE_RATE;
         int tenure;
         
-        if(isManufacturing && businessInvestment >= 10000000) {
-            rate = MANUFACTURING_RATE;
+        if (isManufacturing && businessInvestment >= 10000000) {
+            rate = LoanCalculator::MANUFACTURING_RATE;
             cout << "\n\n=== MANUFACTURING LOAN TERMS ===";
             cout << "\nMin. Investment: ₹1,00,00,000"
                  << "\nInterest Rate: " << rate << "%"
-                 << "\nLand Acquisition: Government-assisted :cite[8]";
+                 << "\nLand Acquisition: Government-assisted";
         }
 
         cout << "\n\nEnter desired amount (₹): ";
@@ -127,10 +132,9 @@ int main() {
 
         calculator.displayLoanTerms(isManufacturing, businessInvestment);
         calculator.calculateEMI(amount, rate, tenure);
-    }
-    else {
-        cout << "\n❌ Application Rejected. Reasons:\n";
-        for(const auto& reason : rejectionReasons) {
+    } else {
+        cout << "\nApplication Rejected. Reasons:\n";
+        for (const auto& reason : rejectionReasons) {
             cout << "- " << reason << endl;
         }
     }
